@@ -1,0 +1,41 @@
+name: Refresh the CSV
+
+on:
+  schedule:
+    # Once a day, after the previous UTC day has closed and the site has regenerated.
+    - cron: "30 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Fetch the live CSV
+        run: |
+          curl --fail --silent --show-error --retry 3 --retry-delay 20 \
+            -A "uk-fuel-prices-mirror (+https://github.com/${GITHUB_REPOSITORY})" \
+            -o data/new.csv \
+            https://fueltracker.uk/fuel-prices/history/uk-fuel-prices-daily.csv
+          # A challenge page or a truncated response must never replace the data.
+          head -1 data/new.csv | grep -qx 'date,fuel_type,fuel_name,average_price_pence_per_litre,price_readings'
+          # A cut-off transfer: the file must end in a newline, on a complete row.
+          [ -z "$(tail -c1 data/new.csv)" ]
+          tail -1 data/new.csv | awk -F, 'NF >= 5' | grep -q .
+          # The source keeps a rolling year, so rows can drop off the far end; a sharp fall means a
+          # bad fetch.
+          test "$(wc -l < data/new.csv)" -ge "$(( $(wc -l < data/uk-fuel-prices-daily.csv) * 9 / 10 ))"
+          mv data/new.csv data/uk-fuel-prices-daily.csv
+
+      - name: Commit if it changed
+        run: |
+          if git diff --quiet; then echo "No change"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/uk-fuel-prices-daily.csv
+          git commit -m "Refresh the CSV to $(tail -1 data/uk-fuel-prices-daily.csv | cut -d, -f1)"
+          git push
