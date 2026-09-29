@@ -10,6 +10,7 @@ month by month, alongside a monthly report:
 - **Tables and method:** https://fueltracker.uk/fuel-prices/history
 - **Monthly reports:** https://fueltracker.uk/guides/uk-fuel-price-report
 - **Live CSV (the source of this file):** https://fueltracker.uk/fuel-prices/history/uk-fuel-prices-daily.csv
+- **On Kaggle:** https://www.kaggle.com/datasets/mburnett/uk-daily-average-fuel-prices
 
 ## The file
 
@@ -34,7 +35,7 @@ series starts at its first run of seven consecutive such days, so the record sta
 Only completed days are included. Biodiesel (B10) and HVO are sold at too few forecourts to have a
 national series.
 
-The file here is refreshed from the live CSV once a day, at 02:30 UTC, by the workflow in `.github/workflows/update.yml`.
+The file here is refreshed from the live CSV once a day, at 02:30 UTC, by the workflow in `.github/workflows/update.yml`, which also publishes each change as a new version of the Kaggle dataset.
 
 ## Licence
 
