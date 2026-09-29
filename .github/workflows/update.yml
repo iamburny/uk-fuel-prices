@@ -5,6 +5,11 @@ on:
     # Once a day, after the previous UTC day has closed and the site has regenerated.
     - cron: "30 2 * * *"
   workflow_dispatch:
+    inputs:
+      push_to_kaggle:
+        description: "Push a Kaggle version even if the CSV hasn't changed"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -12,6 +17,12 @@ permissions:
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    # At job level so the Kaggle step's condition can see them; empty until they are configured.
+    env:
+      KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+      KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+      KAGGLE_DATASET: ${{ vars.KAGGLE_DATASET }}
     steps:
       - uses: actions/checkout@v5
 
@@ -32,10 +43,28 @@ jobs:
           mv data/new.csv data/uk-fuel-prices-daily.csv
 
       - name: Commit if it changed
+        id: commit
         run: |
-          if git diff --quiet; then echo "No change"; exit 0; fi
+          if git diff --quiet; then echo "No change"; echo "changed=false" >> "$GITHUB_OUTPUT"; exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/uk-fuel-prices-daily.csv
           git commit -m "Refresh the CSV to $(tail -1 data/uk-fuel-prices-daily.csv | cut -d, -f1)"
           git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      # A new version of the Kaggle dataset, carrying the same file. Skipped until the repo has the
+      # credentials (a KAGGLE_API_TOKEN secret, or the legacy KAGGLE_USERNAME + KAGGLE_KEY pair) and the
+      # KAGGLE_DATASET variable ("owner/slug").
+      - name: Push a new Kaggle version
+        if: >-
+          (steps.commit.outputs.changed == 'true' || inputs.push_to_kaggle) &&
+          (env.KAGGLE_API_TOKEN != '' || env.KAGGLE_KEY != '') && env.KAGGLE_DATASET != ''
+        run: |
+          pip install --quiet kaggle
+          mkdir -p kaggle-upload
+          cp data/uk-fuel-prices-daily.csv kaggle-upload/
+          # Only the id: the title, description and licence set on Kaggle are left as they are.
+          printf '{"id": "%s"}\n' "$KAGGLE_DATASET" > kaggle-upload/dataset-metadata.json
+          kaggle datasets version -p kaggle-upload \
+            -m "Data to $(tail -1 data/uk-fuel-prices-daily.csv | cut -d, -f1)"
