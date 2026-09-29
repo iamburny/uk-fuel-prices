@@ -34,7 +34,7 @@ series starts at its first run of seven consecutive such days, so the record sta
 Only completed days are included. Biodiesel (B10) and HVO are sold at too few forecourts to have a
 national series.
 
-The file here is refreshed from the live CSV once a day.
+The file here is a snapshot of the live CSV, which is always current: fetch that for the latest days.
 
 ## Licence
 
