@@ -395,3 +395,11 @@ date,fuel_type,fuel_name,average_price_pence_per_litre,price_readings
 2026-10-20,E5,"Super Unleaded (E5)",192.07,6581
 2026-10-20,B7_STANDARD,"Diesel (B7)",199.20,8550
 2026-10-20,B7_PREMIUM,"Premium Diesel (B7)",218.62,4391
+2026-10-21,E10,"Unleaded (E10)",174.01,8439
+2026-10-21,E5,"Super Unleaded (E5)",191.89,6510
+2026-10-21,B7_STANDARD,"Diesel (B7)",199.11,8404
+2026-10-21,B7_PREMIUM,"Premium Diesel (B7)",218.40,4334
+2026-10-22,E10,"Unleaded (E10)",174.01,8553
+2026-10-22,E5,"Super Unleaded (E5)",191.99,6587
+2026-10-22,B7_STANDARD,"Diesel (B7)",199.16,8478
+2026-10-22,B7_PREMIUM,"Premium Diesel (B7)",218.45,4371
